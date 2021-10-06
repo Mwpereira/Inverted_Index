@@ -1,6 +1,6 @@
 export default {
-  ssr: true,
-  target: 'server',
+  ssr: false,
+  target: 'universal',
   head: {
     title: 'Inverted Index',
     htmlAttrs: {
