@@ -19,31 +19,47 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
 app.post('/invert', (req, res) => {
-  invertResult.settings = {
-    removeStopWords: req.body.removeStopWords,
-    stemWords: req.body.stemWords,
-  }
-  const data = Invert.runScript(invertResult.settings)
-  invertResult = {
-    dictionary: data.dictionary,
-    postings: data.postings,
-    documents: data.documents,
-    settings: data.settings
-  }
-  res.json({
-    data: {
+  try {
+    invertResult.settings = {
+      removeStopWords: req.body.removeStopWords,
+      stemWords: req.body.stemWords
+    }
+    const data = Invert.runScript(invertResult.settings)
+    invertResult = {
+      dictionary: data.dictionary,
+      postings: data.postings,
+      documents: data.documents,
+      settings: data.settings
+    }
+    res.json({
       documents: Object.entries(invertResult.documents).length,
       terms: Object.entries(invertResult.dictionary).length
-    }
-  })
+    })
+  } catch {
+    res.json({
+      error: 'Server Error'
+    })
+  }
 })
 
 app.post('/test', (req, res) => {
-  const startTime = new Date().getDate()
-  const response = Test.searchKeyword(req.body.keyword, invertResult)
-  const endTime = new Date().getDate()
-  response.time = endTime - startTime
-  res.json({ data: response })
+  try {
+    if (Object.keys(invertResult.documents).length === 0) {
+      res.json({
+        error: 'Please Invert Index First'
+      })
+      return;
+    }
+    const startTime = new Date().getDate()
+    const response = Test.searchKeyword(req.body.keyword, invertResult)
+    const endTime = new Date().getDate()
+    response.time = endTime - startTime
+    res.json({ ...response })
+  } catch {
+    res.json({
+      error: 'Server Error'
+    })
+  }
 })
 
 module.exports = app

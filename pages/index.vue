@@ -59,7 +59,15 @@
       </div>
     </section>
     <section class='my-5' v-if='results'>
-      <p>Results: {{ }} Documents</p>
+      <p class='is-size-5'>Results: {{ results.length }} Document(s)</p>
+      <div v-for='result in results' :key='result.documentId'>
+        <div class='box'>
+          <p><span class='has-text-weight-bold'>DocumentId:</span> {{ result.documentId }} </p>
+          <p><span class='has-text-weight-bold'>Term Frequency:</span> {{ result.termFrequency }}</p>
+          <p><span class='has-text-weight-bold'>Positions:</span> {{ result.results }}</p>
+          <p><span class='has-text-weight-bold'>Summary:</span> {{ result.summary }}</p>
+        </div>
+      </div>
     </section>
   </section>
 </template>
@@ -85,10 +93,13 @@ export default class Index extends Vue {
       await BuefyService.startLoading()
       await axios.post(`/test`, {
         keyword: this.keyword
-      }).then((response) => {
+      }).then(response => {
+        // @ts-ignore
+        this.results = response.data.results
+        console.log(this.results)
         BuefyService.successToast('Documents Retrieved')
-      }).catch(() => {
-        BuefyService.dangerToast('Error')
+      }).catch(error => {
+        BuefyService.dangerToast(error.response.data.error)
       })
       await BuefyService.stopLoading()
     }
@@ -99,15 +110,30 @@ export default class Index extends Vue {
     await axios.post(`/invert`, {
       removeStopWords: this.removeStopWords,
       stemWords: this.stemWords
-    }).then((response) => {
-      const data = JSON.parse(response.data)
-      this.invertSettings = data.settings
+    }).then(() => {
       BuefyService.successToast('Dictionary & Postings Generated')
-    }).catch(() => {
-      BuefyService.dangerToast('Error')
+    }).catch(error => {
+      BuefyService.dangerToast(error.response.data.error)
     })
     await BuefyService.stopLoading()
   }
 }
 </script>
 
+<style>
+.toast.is-success {
+  background-color: rgba(70, 201, 58, 0.1) !important;
+}
+
+.toast.is-danger {
+  background-color: rgba(255, 71, 87, 0.1) !important;
+}
+
+.toast.is-success {
+  color: rgb(70, 201, 58) !important;
+}
+
+.toast.is-danger {
+  color: rgb(255, 71, 87) !important;
+}
+</style>

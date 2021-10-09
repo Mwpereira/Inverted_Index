@@ -25,18 +25,19 @@ export default class Invert {
 
   public static runScript(settings: UserSettings) {
     this.settings = settings;
+    console.info(this.settings)
 
     // Parse data from cacm to documents object
-    const documents = this.parseDataToDocuments({})
+    let documents = this.parseDataToDocuments({})
     console.info('Finished Parsing Data')
 
     // Preprocess document data into dictionary and postings objects
     const data = this.precprocess(documents);
+    documents = data.documents;
     const dictionary = data.dictionary;
     const postings = data.postings;
     console.info('Finished Preprocessing Data')
 
-    // Generate Files
     // Writes dictionary and postings data to their corresponding files.
     this.generateDictionary(dictionary)
     this.generatePostings(postings)
@@ -66,7 +67,8 @@ export default class Invert {
               abstract: '',
               date: '',
               authors: '',
-              citation: ''
+              citation: '',
+              keywords: '',
           }
           break
         case('.T'):
@@ -110,18 +112,20 @@ export default class Invert {
   /**
    * Preprocesses text before inserting into dictionary and keywords
    */
-  private static precprocess(docs: Documents) {
+  private static precprocess(documents: Documents) {
     let dictionary = {}
     let postings = {}
 
-    for (const key in docs) {
+    for (const key in documents) {
       // Unique keywords in a document
-      let data = this.getKeywords(key, this.cleanText(docs[key].title), dictionary, postings, new Set())
-      data = this.getKeywords(key, this.cleanText(docs[key].abstract), data.dictionary, data.postings, data.documentKeywords)
+      documents[key].keywords = this.cleanText(documents[key].title + documents[key].abstract)
+      const data = this.getKeywords(key, this.cleanText(documents[key].keywords).split(' '), dictionary, postings, new Set())
       dictionary = data.dictionary;
       postings = data.postings;
     }
+
     return {
+      documents,
       dictionary,
       postings,
     }
@@ -135,13 +139,12 @@ export default class Invert {
   private static cleanText(text: string) {
     return (
       text
-        .replace(/(?=[A-Z])|([+-]?\d+(?:\.\d+)?)/g, ' $1') // Combined Words
+        // .replace(/(?=[A-Z])|([+-]?\d+(?:\.\d+)?)/g, ' $1') // Combined Words
         .replace(/-/g, ' ') // Hyphen Characters
         .replace(/(?!-)[^\w\s]|_/g, ' ') // Grammatical Characters
         .replace(/\s+/g, ' ') // Additional Space
         .toLowerCase()
         .trim()
-        .split(' ')
     )
   }
 

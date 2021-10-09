@@ -4,6 +4,7 @@ export default interface Documents {
     abstract: string,
     date: string,
     authors: string,
-    citation: string
+    citation: string,
+    keywords: string
   };
 }
