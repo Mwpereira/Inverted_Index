@@ -45,21 +45,24 @@
                      type='search'
                      icon-pack='fas'
                      v-model='keyword'
+                     @keydown.native.enter='test'
                      icon='search'>
             </b-input>
           </b-field>
-          <b-button class='mt-1' @click='test()'>
+          <b-button class='mt-1' @click='test'>
             Search
           </b-button>
         </div>
         <div class='column'>
-          <!--          <b-field><span class='is-size-5 has-text-weight-bold'>Searches:</span> {{ searches }}</b-field>-->
-          <!--          <b-field>Avg. Time: {{ avgTime }}</b-field>-->
         </div>
       </div>
     </section>
     <section class='my-5' v-if='results'>
-      <p class='is-size-5'>Results: {{ results.length }} Document(s)</p>
+      <p class='is-size-5'><span class='has-text-weight-bold'>Results:</span> {{ results.length }} Document(s)</p>
+      <div class='mt-3'>
+        <b-field><span class='has-text-weight-bold'>Searches:</span> {{ searches }}</b-field>
+        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ time / searches }}</b-field>
+      </div>
       <div v-for='result in results' :key='result.documentId'>
         <div class='box'>
           <p><span class='has-text-weight-bold'>DocumentId:</span> {{ result.documentId }} </p>
@@ -84,7 +87,7 @@ export default class Index extends Vue {
   private invertSettings = null
 
   private keyword = ''
-  private avgTime = 0
+  private time = 0
   private searches = 0
   private results = null
 
@@ -96,7 +99,8 @@ export default class Index extends Vue {
       }).then(response => {
         // @ts-ignore
         this.results = response.data.results
-        console.log(this.results)
+        this.time += response.data.time
+        this.searches++;
         BuefyService.successToast('Documents Retrieved')
       }).catch(error => {
         BuefyService.dangerToast(error.response.data.error)

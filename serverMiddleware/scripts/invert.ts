@@ -6,7 +6,7 @@ import PostingEntry from '~/interfaces/PostingEntry'
 import UserSettings from '~/interfaces/UserSettings'
 import Documents from '~/interfaces/Documents'
 
-const stemmer = require('porter-stemmer-english')
+const natural = require('natural')
 
 /*
  * Index Search
@@ -21,21 +21,20 @@ export default class Invert {
   private static settings = {
     removeStopWords: false,
     stemWords: false
-  };
+  }
 
   public static runScript(settings: UserSettings) {
-    this.settings = settings;
-    console.info(this.settings)
+    this.settings = settings
 
     // Parse data from cacm to documents object
     let documents = this.parseDataToDocuments({})
     console.info('Finished Parsing Data')
 
     // Preprocess document data into dictionary and postings objects
-    const data = this.precprocess(documents);
-    documents = data.documents;
-    const dictionary = data.dictionary;
-    const postings = data.postings;
+    const data = this.precprocess(documents)
+    documents = data.documents
+    const dictionary = data.dictionary
+    const postings = data.postings
     console.info('Finished Preprocessing Data')
 
     // Writes dictionary and postings data to their corresponding files.
@@ -63,12 +62,12 @@ export default class Invert {
           action = 'I'
           documentId = text.split(' ')[1]
           docs[documentId] = {
-              title: '',
-              abstract: '',
-              date: '',
-              authors: '',
-              citation: '',
-              keywords: '',
+            title: '',
+            abstract: '',
+            date: '',
+            authors: '',
+            citation: '',
+            keywords: ''
           }
           break
         case('.T'):
@@ -106,7 +105,7 @@ export default class Invert {
           }
       }
     }
-    return docs;
+    return docs
   }
 
   /**
@@ -120,14 +119,14 @@ export default class Invert {
       // Unique keywords in a document
       documents[key].keywords = this.cleanText(documents[key].title + documents[key].abstract)
       const data = this.getKeywords(key, this.cleanText(documents[key].keywords).split(' '), dictionary, postings, new Set())
-      dictionary = data.dictionary;
-      postings = data.postings;
+      dictionary = data.dictionary
+      postings = data.postings
     }
 
     return {
       documents,
       dictionary,
-      postings,
+      postings
     }
   }
 
@@ -164,10 +163,8 @@ export default class Invert {
 
     for (let i = 0; i < text.length; i++) {
       if (this.settings.stemWords) {
-        text[i] = stemmer(text[i])
+        text[i] = natural.PorterStemmer.stem((text[i].trim()))
       }
-
-      text[i] = text[i].trim()
 
       if (!documentKeywords.has(text[i])) {
         let dictionaryEntry = dictionary[text[i]]

@@ -36,7 +36,7 @@ app.post('/invert', (req, res) => {
       terms: Object.entries(invertResult.dictionary).length
     })
   } catch {
-    res.json({
+    res.status(404).json({
       error: 'Server Error'
     })
   }
@@ -45,7 +45,7 @@ app.post('/invert', (req, res) => {
 app.post('/test', (req, res) => {
   try {
     if (Object.keys(invertResult.documents).length === 0) {
-      res.json({
+      res.status(404).json({
         error: 'Please Invert Index First'
       })
       return;
@@ -53,10 +53,11 @@ app.post('/test', (req, res) => {
     const startTime = new Date().getDate()
     const response = Test.searchKeyword(req.body.keyword, invertResult)
     const endTime = new Date().getDate()
+    console.log(endTime)
     response.time = endTime - startTime
     res.json({ ...response })
   } catch {
-    res.json({
+    res.status(404).json({
       error: 'Server Error'
     })
   }
