@@ -1,7 +1,7 @@
-import {Dictionary} from "./Dictionary";
-import {Postings} from "./Postings";
+import Dictionary from "./Dictionary";
+import Postings from "./Postings";
 
-export interface Payload {
+export default interface Payload {
     documentId: string,
     text: string[],
     dictionary: Dictionary,

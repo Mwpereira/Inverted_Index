@@ -1,6 +1,6 @@
 import PostingEntry from './PostingEntry';
 
-export interface Postings {
+export default interface Postings {
     [key: string]: {
         [key: string]: PostingEntry;
     };

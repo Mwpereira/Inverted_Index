@@ -1,9 +1,10 @@
-import * as fs from "fs";
+import * as fs from 'fs'
 import * as sw from 'stopword'
-import { Payload } from '~/interfaces/Payload'
-import { Dictionary } from '~/interfaces/Dictionary'
-import { Postings } from '~/interfaces/Postings'
+import Dictionary from '~/interfaces/Dictionary'
+import Postings from '~/interfaces/Postings'
 import PostingEntry from '~/interfaces/PostingEntry'
+import UserSettings from '~/interfaces/UserSettings'
+import Documents from '~/interfaces/Documents'
 
 const stemmer = require('porter-stemmer-english')
 
@@ -12,62 +13,118 @@ const stemmer = require('porter-stemmer-english')
  *
  * Involves finding and storing document id, frequency and word index of a specific keyword.
  */
-const cacm = fs.readFileSync('./static/cacm.all').toString('utf-8').split('.I')
+const cacm = fs.readFileSync('./static/cacm.all').toString('utf-8').split('\n')
 const stopWords = fs.readFileSync('./static/common_words').toString('utf-8').split('\n')
 
 // Retrieve Dictionary and Postings Map
 export default class Invert {
-  public static runScript(removeStopWords: boolean, stemWords: boolean) {
-    let payload: Payload = {
-      documentId: '',
-      text: [''],
-      dictionary: {},
-      postings: {},
-      documentKeywords: new Set(),
-      removeStopWords,
-      stemWords
-    }
+  private static settings = {
+    removeStopWords: false,
+    stemWords: false
+  };
 
-    for (let i = 1; i < cacm.length; i++) {
-      // Unique keywords in a document
-      payload.documentKeywords = new Set()
+  public static runScript(settings: UserSettings) {
+    this.settings = settings;
 
-      // Get Document Data from CACM
-      const documentArr = cacm[i].split('\n')
+    // Parse data from cacm to documents object
+    const documents = this.parseDataToDocuments({})
+    console.info('Finished Parsing Data')
 
-      // Retrieve Document ID
-      payload.documentId = documentArr[0].trim()
+    // Preprocess document data into dictionary and postings objects
+    const data = this.precprocess(documents);
+    const dictionary = data.dictionary;
+    const postings = data.postings;
+    console.info('Finished Preprocessing Data')
 
-      // Retrieve Title
-      const title = this.cleanText(documentArr[2])
-
-      // Gets keywords from Title
-      payload.text = title.split(' ')
-      payload = this.getKeywords(payload)
-
-      // Gets keywords from Abstract Data
-      const hasAbstract = cacm[i].includes('.W')
-
-      if (hasAbstract) {
-        const abstract = this.cleanText(
-          cacm[i].substring(cacm[i].indexOf('.W') + 3, cacm[i].indexOf('.B'))
-        )
-
-        payload.text = abstract.split(' ')
-        payload = this.getKeywords(payload)
-      }
-    }
-
-    console.info('Finished Gathering Data')
-
+    // Generate Files
     // Writes dictionary and postings data to their corresponding files.
-    this.generateDictionary(payload.dictionary)
-    this.generatePostings(payload.postings)
+    this.generateDictionary(dictionary)
+    this.generatePostings(postings)
 
     return {
-      ...payload.dictionary,
-      ...payload.postings,
-    };
+      dictionary,
+      postings,
+      documents,
+      settings
+    }
+  }
+
+  /**
+   * Parsing data from CACM to a documents object
+   */
+  private static parseDataToDocuments(docs: Documents): Documents {
+    let documentId = ''
+    let action = ''
+    for (let i = 0; i < cacm.length; i++) {
+      const text = cacm[i]
+      switch (cacm[i].substring(0, 2)) {
+        case('.I'):
+          action = 'I'
+          documentId = text.split(' ')[1]
+          docs[documentId] = {
+              title: '',
+              abstract: '',
+              date: '',
+              authors: '',
+              citation: ''
+          }
+          break
+        case('.T'):
+          action = 'T'
+          break
+        case('.W'):
+          action = 'W'
+          break
+        case('.B'):
+          action = 'B'
+          break
+        case('.A'):
+          action = 'A'
+          break
+        case('.X'):
+          action = 'X'
+          break
+        default:
+          switch (action) {
+            case('T'):
+              docs[documentId].title = text
+              break
+            case('W'):
+              docs[documentId].abstract += ` ${text}`
+              break
+            case('B'):
+              docs[documentId].date = text.trim()
+              break
+            case('A'):
+              docs[documentId].authors += text.trim()
+              break
+            case('X'):
+              docs[documentId].citation += text.replace(/\t/g, ' ').trim()
+              break
+          }
+      }
+    }
+    return docs;
+  }
+
+  /**
+   * Preprocesses text before inserting into dictionary and keywords
+   */
+  private static precprocess(docs: Documents) {
+    let dictionary = {}
+    let postings = {}
+
+    for (const key in docs) {
+      // Unique keywords in a document
+      let data = this.getKeywords(key, this.cleanText(docs[key].title), dictionary, postings, new Set())
+      data = this.getKeywords(key, this.cleanText(docs[key].abstract), data.dictionary, data.postings, data.documentKeywords)
+      dictionary = data.dictionary;
+      postings = data.postings;
+    }
+    return {
+      dictionary,
+      postings,
+    }
   }
 
   /**
@@ -84,67 +141,75 @@ export default class Invert {
         .replace(/\s+/g, ' ') // Additional Space
         .toLowerCase()
         .trim()
+        .split(' ')
     )
   }
 
   /**
    * Obtains keywords from text
    *
-   * @param payload
+   * @param documentId
+   * @param text
+   * @param dictionary
+   * @param postings
+   * @param documentKeywords
    */
-  private static getKeywords(payload: Payload): Payload {
-    if (payload.removeStopWords) {
-      payload.text = sw.removeStopwords(payload.text, stopWords)
+  private static getKeywords(documentId: string, text: string[], dictionary: Dictionary, postings: Postings, documentKeywords: Set<string>) {
+    if (this.settings.removeStopWords) {
+      text = sw.removeStopwords(text, stopWords)
     }
 
-    for (let i = 0; i < payload.text.length; i++) {
-      if (payload.stemWords) {
-        payload.text[i] = stemmer(payload.text[i])
+    for (let i = 0; i < text.length; i++) {
+      if (this.settings.stemWords) {
+        text[i] = stemmer(text[i])
       }
 
-      payload.text[i] = payload.text[i].trim();
+      text[i] = text[i].trim()
 
-      if (!payload.documentKeywords.has(payload.text[i])) {
-        let dictionaryEntry = payload.dictionary[payload.text[i]]
+      if (!documentKeywords.has(text[i])) {
+        let dictionaryEntry = dictionary[text[i]]
 
         if (dictionaryEntry) {
-          payload.dictionary[payload.text[i]] = ++dictionaryEntry
+          dictionary[text[i]] = ++dictionaryEntry
         } else {
-          payload.dictionary[payload.text[i]] = 1
+          dictionary[text[i]] = 1
         }
 
-        payload.documentKeywords.add(payload.text[i])
+        documentKeywords.add(text[i])
       }
 
-      const postingKeyWord = payload.postings[payload.text[i]]
+      const postingKeyWord = postings[text[i]]
 
       if (postingKeyWord) {
-        const postingEntry: PostingEntry = payload.postings[payload.text[i]][payload.documentId]
+        const postingEntry: PostingEntry = postings[text[i]][documentId]
         if (postingEntry) {
-          payload.postings[payload.text[i]][payload.documentId] = {
+          postings[text[i]][documentId] = {
             documentId: postingEntry.documentId,
             termFrequency: ++postingEntry.termFrequency,
             positions: postingEntry.positions.concat(i + 1)
           }
         } else {
-          payload.postings[payload.text[i]][payload.documentId] = {
-            documentId: payload.documentId,
+          postings[text[i]][documentId] = {
+            documentId,
             termFrequency: 1,
             positions: [i + 1]
           }
         }
       } else {
-        payload.postings[payload.text[i]] = {
-          [payload.documentId]: {
-            documentId: payload.documentId,
+        postings[text[i]] = {
+          [documentId]: {
+            documentId,
             termFrequency: 1,
             positions: [i + 1]
           }
         }
       }
     }
-
-    return payload
+    return {
+      dictionary,
+      postings,
+      documentKeywords
+    }
   }
 
   /**
@@ -157,7 +222,7 @@ export default class Invert {
       const dictionaryWriteStream = fs.createWriteStream('./generated/dictionary')
 
       for (const [key, value] of Object.entries(dictionary).sort()) {
-        dictionaryWriteStream.write(`${key},${value};\n`)
+        dictionaryWriteStream.write(`${key}\t${value}\n`)
       }
 
       dictionaryWriteStream.close()
@@ -177,9 +242,9 @@ export default class Invert {
     try {
       const postingsWriteStream = fs.createWriteStream('./generated/postings')
 
-      for (const [key, value] of Object.entries(postings).sort()) {
+      for (const [key,] of Object.entries(postings).sort()) {
         let str = ''
-        for (const [postingKey, postingValue] of Object.entries(postings[key]).sort()) {
+        for (const [, postingValue] of Object.entries(postings[key]).sort()) {
           str +=
             postingValue.documentId +
             '\t' +

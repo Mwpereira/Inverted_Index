@@ -54,7 +54,7 @@ export default {
     }
   },
   serverMiddleware: [
-    './serverMiddleware/invert', { path: 'michael', handler: './serverMiddleware/invert.ts' }
+    './serverMiddleware/server', { path: 'server', handler: './serverMiddleware/server.ts' }
   ],
   server: {
     port: 8080
