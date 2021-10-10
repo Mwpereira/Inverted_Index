@@ -16,7 +16,7 @@ export default class Test {
           summary: ''
         }
         entry.summary = invertResult.documents[documentId].keywords.split(' ').slice
-        (entry.results[0], entry.results[0] + 10)
+        (entry.results[0] - 1, entry.results[0] + 10 )
         results.push(entry)
       });
       return { results }

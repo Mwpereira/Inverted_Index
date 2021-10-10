@@ -64,7 +64,7 @@
         <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ time / searches }}</b-field>
       </div>
       <div v-for='result in results' :key='result.documentId'>
-        <div class='box'>
+        <div class='box my-5'>
           <p><span class='has-text-weight-bold'>DocumentId:</span> {{ result.documentId }} </p>
           <p><span class='has-text-weight-bold'>Term Frequency:</span> {{ result.termFrequency }}</p>
           <p><span class='has-text-weight-bold'>Positions:</span> {{ result.results }}</p>
