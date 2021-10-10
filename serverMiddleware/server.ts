@@ -50,12 +50,12 @@ app.post('/test', (req, res) => {
       })
       return;
     }
-    const startTime = Math.round(new Date().getTime())
+    const startTime = Math.round(Date.now())
     const response = Test.searchKeyword(req.body.keyword, invertResult)
-    const endTime = Math.round(new Date().getTime())
+    const endTime = Math.round(Date.now())
     console.log(startTime)
     console.log(endTime)
-    console.log(Math.round(new Date().getTime()))
+    console.log(Math.round(Date.now()))
     response.time = endTime - startTime
     res.json({ ...response })
   } catch {

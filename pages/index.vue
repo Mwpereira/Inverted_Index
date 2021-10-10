@@ -30,10 +30,10 @@
       <b-button class='mt-1' @click='invert()'>
         Invert
       </b-button>
-      <div v-show='invertSettings'>
-        <p>Dictionary & Posting Files Current Settings:</p>
-        <p>StopWord Removal: {{ invertSettings !== null ? invertSettings.removeStopWords : 'N/A' }} </p>
-        <p>Stemming: {{ invertSettings !== null ? invertSettings.stemWords : 'N/A' }}</p>
+      <div v-show='invertResults'>
+        <p class='has-text-weight-bold'>Dictionary & Posting Files:</p>
+        <p>Terms before preprocessing: {{ invertResults !== null ? '10446 Terms' : 'N/A' }} </p>
+        <p>Terms after preprocessing: {{ invertResults !== null ? `${invertResults.terms} Terms` : 'N/A' }}</p>
       </div>
     </section>
     <section class='my-5'>
@@ -61,11 +61,11 @@
       <p class='is-size-5'><span class='has-text-weight-bold'>Results:</span> {{ results.length }} Document(s)</p>
       <div class='mt-3'>
         <b-field><span class='has-text-weight-bold'>Searches:</span> {{ searches }}</b-field>
-        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ time / searches }}</b-field>
+        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ (time / searches).toFixed(2) }}ms</b-field>
       </div>
       <div v-for='result in results' :key='result.documentId'>
         <div class='box my-5'>
-          <p><span class='has-text-weight-bold'>DocumentId:</span> {{ result.documentId }} </p>
+          <p><span class='has-text-weight-bold'>Document Id:</span> {{ result.documentId }} </p>
           <p><span class='has-text-weight-bold'>Term Frequency:</span> {{ result.termFrequency }}</p>
           <p><span class='has-text-weight-bold'>Positions:</span> {{ result.results }}</p>
           <p><span class='has-text-weight-bold'>Summary:</span> {{ result.summary }}</p>
@@ -84,7 +84,7 @@ import BuefyService from '~/services/buefy-service'
 export default class Index extends Vue {
   private removeStopWords = false
   private stemWords = false
-  private invertSettings = null
+  private invertResults = null
 
   private keyword = ''
   private time = 0
@@ -114,7 +114,9 @@ export default class Index extends Vue {
     await axios.post(`/invert`, {
       removeStopWords: this.removeStopWords,
       stemWords: this.stemWords
-    }).then(() => {
+    }).then(response => {
+      // @ts-ignore
+      this.invertResults.terms = response.data.terms
       BuefyService.successToast('Dictionary & Postings Generated')
     }).catch(error => {
       BuefyService.dangerToast(error.response.data.error)
