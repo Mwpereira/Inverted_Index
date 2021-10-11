@@ -48,7 +48,7 @@ app.post('/test', (req, res) => {
       res.status(404).json({
         error: 'Please Invert Index First'
       })
-      return;
+      return
     }
     const startTime = Math.round(Date.now())
     const response = Test.searchKeyword(req.body.keyword, invertResult)

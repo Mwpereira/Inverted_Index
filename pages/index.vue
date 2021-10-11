@@ -16,9 +16,9 @@
     <section class='my-5'>
       <h3 class='is-size-5 has-text-weight-bold mb-4'>Settings</h3>
       <b-field>
-        <b-checkbox v-model='removeStopWords'
+        <b-checkbox v-model='removeStopwords'
                     type='is-warning'>
-          Enable StopWord Removal
+          Enable Stopword Removal
         </b-checkbox>
       </b-field>
       <b-field>
@@ -61,7 +61,9 @@
       <p class='is-size-5'><span class='has-text-weight-bold'>Results:</span> {{ results.length }} Document(s)</p>
       <div class='mt-3'>
         <b-field><span class='has-text-weight-bold'>Searches:</span> {{ searches }}</b-field>
-        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ ((time / searches) || 0).toFixed(2) || 'N/A' }}ms</b-field>
+        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ ((time / searches) || 0).toFixed(2) || 'N/A'
+          }}ms
+        </b-field>
       </div>
       <div v-for='result in results' :key='result.documentId'>
         <div class='box my-5'>
@@ -82,7 +84,7 @@ import BuefyService from '~/services/buefy-service'
 
 @Component
 export default class Index extends Vue {
-  private removeStopWords = false
+  private removeStopwords = false
   private stemWords = false
   private invertResults = null
 
@@ -92,7 +94,8 @@ export default class Index extends Vue {
   private results = null
 
   private async test() {
-    if (/\S/.test(this.keyword)) {
+    // Allowing one word
+    if (/^[A-Za-z0-9]+$/.test(this.keyword)) {
       await BuefyService.startLoading()
       await axios.post(`/test`, {
         keyword: this.keyword
@@ -103,7 +106,7 @@ export default class Index extends Vue {
         if (this.results.length !== 0) {
           // @ts-ignore
           this.time += response.data.time
-          this.searches++;
+          this.searches++
         }
         BuefyService.successToast('Documents Retrieved')
       }).catch(error => {
@@ -116,7 +119,7 @@ export default class Index extends Vue {
   private async invert() {
     await BuefyService.startLoading()
     await axios.post(`/invert`, {
-      removeStopWords: this.removeStopWords,
+      removeStopWords: this.removeStopwords,
       stemWords: this.stemWords
     }).then(response => {
       // @ts-ignore
