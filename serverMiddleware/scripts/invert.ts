@@ -14,7 +14,7 @@ const natural = require('natural')
  * Involves finding and storing document id, frequency and word index of a specific keyword.
  */
 const cacm = fs.readFileSync('./static/cacm.all').toString('utf-8').split('\n')
-const stopWords = fs.readFileSync('./static/common_words').toString('utf-8').split('\n')
+const stopwords = fs.readFileSync('./static/common_words').toString('utf-8').split('\n')
 
 // Retrieve Dictionary and Postings Map
 export default class Invert {
@@ -67,7 +67,8 @@ export default class Invert {
             date: '',
             authors: '',
             citation: '',
-            keywords: ''
+            keywords: '',
+            keywordsArr: []
           }
           break
         case('.T'):
@@ -116,9 +117,18 @@ export default class Invert {
     let postings = {}
 
     for (const key in documents) {
+      if (this.settings.removeStopWords || this.settings.stemWords) {
+        documents[key].keywordsArr = this.transformDocuments(this.cleanText(documents[key].title + documents[key].abstract).split(' '));
+      } else {
+        documents[key].keywords = this.cleanText(documents[key].title + documents[key].abstract)
+      }
       // Unique keywords in a document
-      documents[key].keywords = this.cleanText(documents[key].title + documents[key].abstract)
-      const data = this.getKeywords(key, this.cleanText(documents[key].keywords).split(' '), dictionary, postings, new Set())
+      let data;
+      if (documents[key].keywords.length !== 0) {
+        data = this.getKeywords(key, this.cleanText(documents[key].keywords).split(' '), dictionary, postings, new Set())
+      } else {
+        data = this.getKeywords(key, this.cleanTextArr(documents[key].keywordsArr), dictionary, postings, new Set())
+      }
       dictionary = data.dictionary
       postings = data.postings
     }
@@ -148,6 +158,43 @@ export default class Invert {
   }
 
   /**
+   * Sanitizes text
+   *
+   * @param textArr
+   */
+  private static cleanTextArr(textArr: string[]) {
+    for (let i = 0; i < textArr.length; i++) {
+      textArr[i] = textArr[i]
+        // .replace(/(?=[A-Z])|([+-]?\d+(?:\.\d+)?)/g, ' $1') // Combined Words
+        .replace(/-/g, ' ') // Hyphen Characters
+        .replace(/(?!-)[^\w\s]|_/g, ' ') // Grammatical Characters
+        .replace(/\s+/g, ' ') // Additional Space
+        .toLowerCase()
+        .trim()
+    }
+    return textArr;
+  }
+
+  /**
+   * Remove content based on settings
+   *
+   * @param keywordsArr
+   */
+  private static transformDocuments(keywordsArr: string[]): string[] {
+    if (this.settings.removeStopWords) {
+      keywordsArr = sw.removeStopwords(keywordsArr, stopwords)
+    }
+
+    if (this.settings.stemWords) {
+    for (let i = 0; i < keywordsArr.length; i++) {
+        keywordsArr[i] = natural.PorterStemmer.stem(keywordsArr[i])
+      }
+    }
+
+    return keywordsArr;
+  }
+
+  /**
    * Obtains keywords from text
    *
    * @param documentId
@@ -158,7 +205,7 @@ export default class Invert {
    */
   private static getKeywords(documentId: string, text: string[], dictionary: Dictionary, postings: Postings, documentKeywords: Set<string>) {
     if (this.settings.removeStopWords) {
-      text = sw.removeStopwords(text, stopWords)
+      text = sw.removeStopwords(text, stopwords)
     }
 
     for (let i = 0; i < text.length; i++) {

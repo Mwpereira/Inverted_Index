@@ -27,11 +27,11 @@
           Enable Stemming
         </b-checkbox>
       </b-field>
-      <b-button class='mt-1' @click='invert()'>
+      <b-button class='my-1' @click='invert()'>
         Invert
       </b-button>
-      <div v-show='invertResults'>
-        <p class='has-text-weight-bold'>Dictionary & Posting Files:</p>
+      <div v-show='invertResults' class='my-4'>
+        <p class='has-text-weight-bold mb-2'>Dictionary & Posting Files:</p>
         <p>Terms before preprocessing: {{ invertResults !== null ? '10446 Terms' : 'N/A' }} </p>
         <p>Terms after preprocessing: {{ invertResults !== null ? `${invertResults.terms} Terms` : 'N/A' }}</p>
       </div>
@@ -57,11 +57,11 @@
         </div>
       </div>
     </section>
-    <section class='my-5' v-if='results'>
+    <section v-if='results' class='my-5'>
       <p class='is-size-5'><span class='has-text-weight-bold'>Results:</span> {{ results.length }} Document(s)</p>
       <div class='mt-3'>
         <b-field><span class='has-text-weight-bold'>Searches:</span> {{ searches }}</b-field>
-        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ (time / searches).toFixed(2) }}ms</b-field>
+        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ ((time / searches) || 0).toFixed(2) || 'N/A' }}ms</b-field>
       </div>
       <div v-for='result in results' :key='result.documentId'>
         <div class='box my-5'>
@@ -99,8 +99,12 @@ export default class Index extends Vue {
       }).then(response => {
         // @ts-ignore
         this.results = response.data.results
-        this.time += response.data.time
-        this.searches++;
+        // @ts-ignore
+        if (this.results.length !== 0) {
+          // @ts-ignore
+          this.time += response.data.time
+          this.searches++;
+        }
         BuefyService.successToast('Documents Retrieved')
       }).catch(error => {
         BuefyService.dangerToast(error.response.data.error)
@@ -116,7 +120,7 @@ export default class Index extends Vue {
       stemWords: this.stemWords
     }).then(response => {
       // @ts-ignore
-      this.invertResults.terms = response.data.terms
+      this.invertResults = response.data
       BuefyService.successToast('Dictionary & Postings Generated')
     }).catch(error => {
       BuefyService.dangerToast(error.response.data.error)

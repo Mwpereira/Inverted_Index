@@ -37,7 +37,7 @@ All files required for the assignment is found under the ```static``` directory.
 
 -   _express_ - for running a server locally to access local files
 -   _stopword_ - for removing stopwords from strings
--   _porter-stemming-english_ - for stemming words in strings
+-   _natural_ - for stemming words in strings
 
 ## 🎨 Front-End
 
