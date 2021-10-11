@@ -16,9 +16,9 @@
     <section class='my-5'>
       <h3 class='is-size-5 has-text-weight-bold mb-4'>Settings</h3>
       <b-field>
-        <b-checkbox v-model='removeStopWords'
+        <b-checkbox v-model='removeStopwords'
                     type='is-warning'>
-          Enable StopWord Removal
+          Enable Stopword Removal
         </b-checkbox>
       </b-field>
       <b-field>
@@ -27,13 +27,13 @@
           Enable Stemming
         </b-checkbox>
       </b-field>
-      <b-button class='mt-1' @click='invert()'>
+      <b-button class='my-1' @click='invert()'>
         Invert
       </b-button>
-      <div v-show='invertSettings'>
-        <p>Dictionary & Posting Files Current Settings:</p>
-        <p>StopWord Removal: {{ invertSettings !== null ? invertSettings.removeStopWords : 'N/A' }} </p>
-        <p>Stemming: {{ invertSettings !== null ? invertSettings.stemWords : 'N/A' }}</p>
+      <div v-show='invertResults' class='my-4'>
+        <p class='has-text-weight-bold mb-2'>Dictionary & Posting Files:</p>
+        <p>Terms before preprocessing: {{ invertResults !== null ? '10446 Terms' : 'N/A' }} </p>
+        <p>Terms after preprocessing: {{ invertResults !== null ? `${invertResults.terms} Terms` : 'N/A' }}</p>
       </div>
     </section>
     <section class='my-5'>
@@ -57,15 +57,17 @@
         </div>
       </div>
     </section>
-    <section class='my-5' v-if='results'>
+    <section v-if='results' class='my-5'>
       <p class='is-size-5'><span class='has-text-weight-bold'>Results:</span> {{ results.length }} Document(s)</p>
       <div class='mt-3'>
         <b-field><span class='has-text-weight-bold'>Searches:</span> {{ searches }}</b-field>
-        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ time / searches }}</b-field>
+        <b-field><span class='has-text-weight-bold'>Avg. Time:</span> {{ ((time / searches) || 0).toFixed(2) || 'N/A'
+          }}ms
+        </b-field>
       </div>
       <div v-for='result in results' :key='result.documentId'>
-        <div class='box'>
-          <p><span class='has-text-weight-bold'>DocumentId:</span> {{ result.documentId }} </p>
+        <div class='box my-5'>
+          <p><span class='has-text-weight-bold'>Document Id:</span> {{ result.documentId }} </p>
           <p><span class='has-text-weight-bold'>Term Frequency:</span> {{ result.termFrequency }}</p>
           <p><span class='has-text-weight-bold'>Positions:</span> {{ result.results }}</p>
           <p><span class='has-text-weight-bold'>Summary:</span> {{ result.summary }}</p>
@@ -82,9 +84,9 @@ import BuefyService from '~/services/buefy-service'
 
 @Component
 export default class Index extends Vue {
-  private removeStopWords = false
+  private removeStopwords = false
   private stemWords = false
-  private invertSettings = null
+  private invertResults = null
 
   private keyword = ''
   private time = 0
@@ -92,6 +94,7 @@ export default class Index extends Vue {
   private results = null
 
   private async test() {
+    // Allowing one word
     if (/\S/.test(this.keyword)) {
       await BuefyService.startLoading()
       await axios.post(`/test`, {
@@ -99,8 +102,12 @@ export default class Index extends Vue {
       }).then(response => {
         // @ts-ignore
         this.results = response.data.results
-        this.time += response.data.time
-        this.searches++;
+        // @ts-ignore
+        if (this.results.length !== 0) {
+          // @ts-ignore
+          this.time += response.data.time
+          this.searches++
+        }
         BuefyService.successToast('Documents Retrieved')
       }).catch(error => {
         BuefyService.dangerToast(error.response.data.error)
@@ -112,9 +119,11 @@ export default class Index extends Vue {
   private async invert() {
     await BuefyService.startLoading()
     await axios.post(`/invert`, {
-      removeStopWords: this.removeStopWords,
+      removeStopWords: this.removeStopwords,
       stemWords: this.stemWords
-    }).then(() => {
+    }).then(response => {
+      // @ts-ignore
+      this.invertResults = response.data
       BuefyService.successToast('Dictionary & Postings Generated')
     }).catch(error => {
       BuefyService.dangerToast(error.response.data.error)

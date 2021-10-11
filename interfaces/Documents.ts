@@ -5,6 +5,7 @@ export default interface Documents {
     date: string,
     authors: string,
     citation: string,
-    keywords: string
+    keywords: string,
+    keywordsArr: string[]
   };
 }
