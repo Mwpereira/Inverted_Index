@@ -95,7 +95,7 @@ export default class Index extends Vue {
 
   private async test() {
     // Allowing one word
-    if (/^[A-Za-z0-9]+$/.test(this.keyword)) {
+    if (/\S/.test(this.keyword)) {
       await BuefyService.startLoading()
       await axios.post(`/test`, {
         keyword: this.keyword

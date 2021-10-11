@@ -148,7 +148,6 @@ export default class Invert {
   private static cleanText(text: string) {
     return (
       text
-        // .replace(/(?=[A-Z])|([+-]?\d+(?:\.\d+)?)/g, ' $1') // Combined Words
         .replace(/-/g, ' ') // Hyphen Characters
         .replace(/(?!-)[^\w\s]|_/g, ' ') // Grammatical Characters
         .replace(/\s+/g, ' ') // Additional Space
@@ -165,7 +164,6 @@ export default class Invert {
   private static cleanTextArr(textArr: string[]) {
     for (let i = 0; i < textArr.length; i++) {
       textArr[i] = textArr[i]
-        // .replace(/(?=[A-Z])|([+-]?\d+(?:\.\d+)?)/g, ' $1') // Combined Words
         .replace(/-/g, ' ') // Hyphen Characters
         .replace(/(?!-)[^\w\s]|_/g, ' ') // Grammatical Characters
         .replace(/\s+/g, ' ') // Additional Space
