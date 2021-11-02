@@ -68,6 +68,7 @@
       <div v-for='result in results' :key='result.documentId'>
         <div class='box my-5'>
           <p><span class='has-text-weight-bold'>Document Id:</span> {{ result.documentId }} </p>
+          <p><span class='has-text-weight-bold'>Document Title:</span> {{ result.title }} </p>
           <p><span class='has-text-weight-bold'>Term Frequency:</span> {{ result.termFrequency }}</p>
           <p><span class='has-text-weight-bold'>Positions:</span> {{ result.results }}</p>
           <p><span class='has-text-weight-bold'>Summary:</span> {{ result.summary }}</p>
