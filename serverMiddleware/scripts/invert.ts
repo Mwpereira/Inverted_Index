@@ -31,7 +31,7 @@ export default class Invert {
     console.info('Finished Parsing Data')
 
     // Preprocess document data into dictionary and postings objects
-    const data = this.precprocess(documents)
+    const data = this.preprocess(documents)
     documents = data.documents
     const dictionary = data.dictionary
     const postings = data.postings
@@ -112,7 +112,7 @@ export default class Invert {
   /**
    * Preprocesses text before inserting into dictionary and keywords
    */
-  private static precprocess(documents: Documents) {
+  private static preprocess(documents: Documents) {
     let dictionary = {}
     let postings = {}
 
