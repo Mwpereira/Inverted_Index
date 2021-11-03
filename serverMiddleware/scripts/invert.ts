@@ -118,12 +118,12 @@ export default class Invert {
 
     for (const key in documents) {
       if (this.settings.removeStopWords || this.settings.stemWords) {
-        documents[key].keywordsArr = this.transformDocuments(this.cleanText(documents[key].title + documents[key].abstract).split(' '));
+        documents[key].keywordsArr = this.transformDocuments(this.cleanText(documents[key].title + documents[key].abstract).split(' '))
       } else {
         documents[key].keywords = this.cleanText(documents[key].title + documents[key].abstract)
       }
       // Unique keywords in a document
-      let data;
+      let data
       if (documents[key].keywords.length !== 0) {
         data = this.getKeywords(key, this.cleanText(documents[key].keywords).split(' '), dictionary, postings, new Set())
       } else {
@@ -170,7 +170,7 @@ export default class Invert {
         .toLowerCase()
         .trim()
     }
-    return textArr;
+    return textArr
   }
 
   /**
@@ -184,12 +184,12 @@ export default class Invert {
     }
 
     if (this.settings.stemWords) {
-    for (let i = 0; i < keywordsArr.length; i++) {
+      for (let i = 0; i < keywordsArr.length; i++) {
         keywordsArr[i] = natural.PorterStemmer.stem(keywordsArr[i])
       }
     }
 
-    return keywordsArr;
+    return keywordsArr
   }
 
   /**
@@ -230,13 +230,15 @@ export default class Invert {
         if (postingEntry) {
           postings[text[i]][documentId] = {
             documentId: postingEntry.documentId,
-            termFrequency: ++postingEntry.termFrequency,
+            frequency: ++postingEntry.termFrequency,
+            termFrequency: 1 + Math.log(++postingEntry.termFrequency),
             positions: postingEntry.positions.concat(i + 1)
           }
         } else {
           postings[text[i]][documentId] = {
             documentId,
-            termFrequency: 1,
+            frequency: 1,
+            termFrequency: 1 + Math.log(1),
             positions: [i + 1]
           }
         }
@@ -244,7 +246,8 @@ export default class Invert {
         postings[text[i]] = {
           [documentId]: {
             documentId,
-            termFrequency: 1,
+            frequency: 1,
+            termFrequency: 1 + Math.log(1),
             positions: [i + 1]
           }
         }
