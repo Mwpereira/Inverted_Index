@@ -231,14 +231,14 @@ export default class Invert {
           postings[text[i]][documentId] = {
             documentId: postingEntry.documentId,
             frequency: ++postingEntry.termFrequency,
-            termFrequency: 1 + Math.log(++postingEntry.termFrequency),
+            termFrequency: 1 + Math.log10(++postingEntry.termFrequency),
             positions: postingEntry.positions.concat(i + 1)
           }
         } else {
           postings[text[i]][documentId] = {
             documentId,
             frequency: 1,
-            termFrequency: 1 + Math.log(1),
+            termFrequency: 1 + Math.log10(1),
             positions: [i + 1]
           }
         }
@@ -247,7 +247,7 @@ export default class Invert {
           [documentId]: {
             documentId,
             frequency: 1,
-            termFrequency: 1 + Math.log(1),
+            termFrequency: 1 + Math.log10(1),
             positions: [i + 1]
           }
         }
