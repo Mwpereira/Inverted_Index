@@ -16,8 +16,8 @@ const stopWords = fs.readFileSync('./static/common_words').toString('utf-8').spl
 // Retrieve Dictionary and Postings Map
 class Invert {
     static runScript() {
-        let dictionary = {};
-        let postings = {};
+        const dictionary = {};
+        const postings = {};
         for (let i = 1; i < cacm.length; i++) {
             const documentKeywords = new Set();
             // Get Document Data from CACM
@@ -27,7 +27,7 @@ class Invert {
             // Retrieve Title
             const title = this.cleanText(documentArr[2]);
             // Gets keywords from Title
-            let titleArr = sw.removeStopwords(title.split(' '), stopWords);
+            const titleArr = sw.removeStopwords(title.split(' '), stopWords);
             for (let i = 0; i < titleArr.length; i++) {
                 titleArr[i] = stemmer(titleArr[i]);
                 if (!documentKeywords.has(titleArr[i])) {
@@ -39,9 +39,9 @@ class Invert {
                         dictionary[titleArr[i]] = 1;
                     }
                 }
-                let postingKeyWord = postings[titleArr[i]];
+                const postingKeyWord = postings[titleArr[i]];
                 if (postingKeyWord) {
-                    let postingEntry = postings[titleArr[i]][documentId];
+                    const postingEntry = postings[titleArr[i]][documentId];
                     if (postingEntry) {
                         postings[titleArr[i]][documentId] = {
                             documentId: postingEntry.documentId,
@@ -51,7 +51,7 @@ class Invert {
                     }
                     else {
                         postings[titleArr[i]][documentId] = {
-                            documentId: documentId,
+                            documentId,
                             termFrequency: 1,
                             positions: [i + 1],
                         };
@@ -60,7 +60,7 @@ class Invert {
                 else {
                     postings[titleArr[i]] = {
                         [documentId]: {
-                            documentId: documentId,
+                            documentId,
                             termFrequency: 1,
                             positions: [i + 1],
                         },
@@ -68,10 +68,10 @@ class Invert {
                 }
             }
             // Gets keywords from Abstract Data
-            let hasAbstract = cacm[i].includes('.W');
+            const hasAbstract = cacm[i].includes('.W');
             if (hasAbstract) {
-                let abstract = this.cleanText(cacm[i].substring(cacm[i].indexOf('.W') + 3, cacm[i].indexOf('.B')));
-                let abstractArr = sw.removeStopwords(abstract.split(' '), stopWords);
+                const abstract = this.cleanText(cacm[i].substring(cacm[i].indexOf('.W') + 3, cacm[i].indexOf('.B')));
+                const abstractArr = sw.removeStopwords(abstract.split(' '), stopWords);
                 for (let i = 0; i < abstractArr.length; i++) {
                     abstractArr[i] = stemmer(abstractArr[i]);
                     if (!documentKeywords.has(abstractArr[i])) {
@@ -83,9 +83,9 @@ class Invert {
                             dictionary[abstractArr[i]] = 1;
                         }
                     }
-                    let postingKeyWord = postings[abstractArr[i]];
+                    const postingKeyWord = postings[abstractArr[i]];
                     if (postingKeyWord) {
-                        let postingEntry = postings[abstractArr[i]][documentId];
+                        const postingEntry = postings[abstractArr[i]][documentId];
                         if (postingEntry) {
                             postings[abstractArr[i]][documentId] = {
                                 documentId: postingEntry.documentId,
@@ -95,7 +95,7 @@ class Invert {
                         }
                         else {
                             postings[abstractArr[i]][documentId] = {
-                                documentId: documentId,
+                                documentId,
                                 termFrequency: 1,
                                 positions: [i + 1],
                             };
@@ -104,7 +104,7 @@ class Invert {
                     else {
                         postings[abstractArr[i]] = {
                             [documentId]: {
-                                documentId: documentId,
+                                documentId,
                                 termFrequency: 1,
                                 positions: [i + 1],
                             },
@@ -118,6 +118,7 @@ class Invert {
         this.generateDictionary(dictionary);
         this.generatePostings(postings);
     }
+
     static cleanText(text) {
         return (text
             .replace(/(?!-)[^\w\s]|_/g, '')
@@ -126,6 +127,7 @@ class Invert {
             .replace(/-/g, ' ')
             .toLowerCase());
     }
+
     /**
      * Generates Dictionary File
      *
@@ -133,7 +135,7 @@ class Invert {
      */
     static generateDictionary(dictionary) {
         try {
-            let dictionaryWriteStream = fs.createWriteStream('./generated/dictionary');
+            const dictionaryWriteStream = fs.createWriteStream('./generated/dictionary');
             for (const [key, value] of Object.entries(dictionary).sort()) {
                 dictionaryWriteStream.write(`${key} \t  ${value} \n`);
             }
@@ -144,6 +146,7 @@ class Invert {
             console.error('Failed to Generate Dictionary');
         }
     }
+
     /**
      * Generates the Postings File
      *
@@ -151,7 +154,7 @@ class Invert {
      */
     static generatePostings(postings) {
         try {
-            let postingsWriteStream = fs.createWriteStream('./generated/postings');
+            const postingsWriteStream = fs.createWriteStream('./generated/postings');
             for (const [key, value] of Object.entries(postings).sort()) {
                 let str = '';
                 for (const [postingKey, postingValue] of Object.entries(postings[key]).sort()) {
@@ -175,4 +178,4 @@ class Invert {
 }
 exports.default = Invert;
 Invert.runScript();
-//# sourceMappingURL=script.js.map
+// # sourceMappingURL=script.js.map

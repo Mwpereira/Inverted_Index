@@ -41,12 +41,12 @@
         <div class='column'>
           <b-field class='is-size-5 has-text-weight-bold mb-4'>Search Documents</b-field>
           <b-field>
-            <b-input placeholder='Keyword'
+            <b-input v-model='keyword'
+                     placeholder='Keyword'
                      type='search'
                      icon-pack='fas'
-                     v-model='keyword'
-                     @keydown.native.enter='test'
-                     icon='search'>
+                     icon='search'
+                     @keydown.native.enter='test'>
             </b-input>
           </b-field>
           <b-button class='mt-1' @click='test'>
