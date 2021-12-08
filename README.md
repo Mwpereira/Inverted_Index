@@ -45,3 +45,10 @@ All files required for the assignment is found under the `static` directory.
 
 - _Buefy_ - for using UI components for Vue.js based on Bulma
 - _axios_ - for the promise based HTTP client to handle requests
+
+## 📷 Gallery
+<img src="static/gallery/home.png" width="900">
+<img src="static/gallery/inverted-index.png" width="900">
+<img src="static/gallery/search.png" width="900">
+
+View more images under the ```./static/gallery/``` directory.
