@@ -51,4 +51,4 @@ All files required for the assignment is found under the `static` directory.
 <img src="static/gallery/inverted-index.png" width="900">
 <img src="static/gallery/search.png" width="900">
 
-View more images under the ```./static/gallery/``` directory.
+View images under the ```./static/gallery/``` directory.
